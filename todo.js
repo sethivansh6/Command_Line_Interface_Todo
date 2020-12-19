@@ -3,13 +3,35 @@
 const fs = require("fs");
 const program = require("commander");
 
-program.version("1.0.0");
+program.action(() => {
+    console.log(`Usage :-
+$ ./todo add "todo item"  # Add a new todo
+$ ./todo ls               # Show remaining todos
+$ ./todo del NUMBER       # Delete a todo
+$ ./todo done NUMBER      # Complete a todo
+$ ./todo help             # Show usage
+$ ./todo report           # Statistics`);
+});
+
+program.command("help").action(() => {
+    console.log(`Usage :-
+$ ./todo add "todo item"  # Add a new todo
+$ ./todo ls               # Show remaining todos
+$ ./todo del NUMBER       # Delete a todo
+$ ./todo done NUMBER      # Complete a todo
+$ ./todo help             # Show usage
+$ ./todo report           # Statistics`);
+});
 
 program
-    .command("add <todo_item>")
+    .command("add [todo_item]")
     .description("# Add a new todo")
     .action((todo_item) => {
-        addTasks(todo_item);
+        if (!todo_item) {
+            console.log("Error: Missing todo string. Nothing added!");
+        } else {
+            addTasks(todo_item);
+        }
     });
 
 program
@@ -20,17 +42,25 @@ program
     });
 
 program
-    .command("del <NUMBER>")
+    .command("del [NUMBER]")
     .description("# Delete a todo")
     .action((NUMBER) => {
-        deleteTasks(NUMBER);
+        if (!NUMBER) {
+            console.log("Error: Missing NUMBER for deleting todo.");
+        } else {
+            deleteTasks(NUMBER);
+        }
     });
 
 program
-    .command("done <NUMBER>")
+    .command("done [NUMBER]")
     .description("# Delete a todo")
     .action((NUMBER) => {
-        doneTasks(NUMBER);
+        if (!NUMBER) {
+            console.log("Error: Missing NUMBER for marking todo as done.");
+        } else {
+            doneTasks(NUMBER);
+        }
     });
 
 program
@@ -45,11 +75,11 @@ program.parse(process.argv);
 function showTasks() {
     fs.readFile("todo.txt", "utf8", function(err, data) {
         if (err) {
-            console.log("No task present!");
+            console.log("There are no pending todos!");
         } else {
             let ar = data.split("\n");
             if (data == "") {
-                console.log("No task present!");
+                console.log("There are no pending todos!");
             }
             for (let i = ar.length - 2; i >= 0; i--) {
                 console.log(`[${i + 1}] ${ar[i]}`);
@@ -75,14 +105,18 @@ function deleteTasks(number) {
         return;
     }
     let num = Number(number);
+    if (num < 1) {
+        console.log(`Error: todo #${num} does not exist. Nothing deleted.`);
+        return;
+    }
 
     fs.readFile("todo.txt", function(err, data) {
         if (err) {
-            console.log(`todo #${num} does not exist. Nothing deleted.`);
+            console.log(`Error: todo #${num} does not exist. Nothing deleted.`);
         } else {
             let todoAr = data.toString().split("\n");
             if (num > todoAr.length - 1) {
-                console.log(`todo #${num} does not exist. Nothing deleted.`);
+                console.log(`Error: todo #${num} does not exist. Nothing deleted.`);
                 return;
             }
             todoAr.splice(num - 1, 1);
@@ -102,6 +136,10 @@ function doneTasks(number) {
         return;
     }
     let num = Number(number);
+    if (num < 1) {
+        console.log(`Error: todo #${num} does not exist.`);
+        return;
+    }
 
     fs.readFile("todo.txt", function(err, data) {
         if (err) {
